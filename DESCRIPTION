@@ -7,6 +7,8 @@ Maintainer: Who to complain to <yourfault@somewhere.net>
 Description: More about what it does (maybe more than one line)
 License: What license is it under?
 LazyData: TRUE
+Depends:
+    R (>= 2.10)
 Imports:
     bit,
     ggplot2,
@@ -14,5 +16,5 @@ Imports:
     qtl,
     parallel,
     Rcpp (>= 0.12.5)
-LinkingTo:
-    Rcpp
+LinkingTo: Rcpp
+RoxygenNote: 5.0.1

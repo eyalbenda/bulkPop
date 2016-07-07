@@ -1,16 +1,17 @@
 #' @import qtl
 #' @import bit
 
-.newGenome = setClass(Class = "genome",slots = c(name = "character",Nchrom = "numeric", markerNames = "character",markerChrom = "character",markerPos = "numeric", recombProbs = "numeric", map = "numeric"))
-
+#' @export
+is.genome = function(x)
+  inherits(x,"genome")
 #' @export
 newGenome = function(name,Nchrom,markerNames,markerChrom,markerPos,recombProbs, map)
 {
   markers
-  .newGenome(name = name,Nchrom = Nchrom,markerNames = markerNames,markerChrom = markerChrom,markerPos = markerPos,recombProbs = recombProbs, map = map)
+  structure(list(name = name,Nchrom = Nchrom,markerNames = markerNames,markerChrom = markerChrom,markerPos = markerPos,recombProbs = recombProbs, map = map),class="genome")
 }
 
-#' This function assumes a single recombination event!!!
+#' This function assumes a single recombination event per chromosome!!!
 #' @param distances A vector of genetic distances between the markers
 #' @export
 recombProbFromGeneticDistance = function(distances){
@@ -30,27 +31,28 @@ recombProbFromGeneticDistance = function(distances){
 #' @export
 expandGenomeToVariantlist = function(genome,variantNames = NULL,variantChrom,variantPos,matchNames = F)
 {
-  if(any(!unique(variantChrom) %in% unique(N2xCB4856.genome@markerChrom)))
+  if(any(!unique(variantChrom) %in% unique(N2xCB4856.genome$markerChrom)))
     stop("variants in chromosomes that don't exist in supplied genome!")
   if(is.null(variantNames))
     variantNames = paste(variantChrom,variantPos,sep=":")
   if(matchNames)
     {
       variantComb = paste(variantChrom,variantPos)
-      genomeComb = paste(genome@markerChrom,genome@markerPos)
+      genomeComb = paste(genome$markerChrom,genome$markerPos)
       matchedVariants = which(variantComb %in% genomeComb)
       if(length(matchedVariants)>0)
       {
-        variantNames[matchedVariants] = genome@markerNames[match(variantComb[matchedVariants],genomeComb)]
+        variantNames[matchedVariants] = genome$markerNames[match(variantComb[matchedVariants],genomeComb)]
       }
     }
   variantMap = NULL;
   for(chrom in unique(variantChrom))
   {
-    indexGenome = which(genome@markerChrom==chrom)
+    indexGenome = which(genome$markerChrom==chrom)
     indexVariants = which(variantChrom==chrom)
-    variantMap = c(variantMap,portMap(xpos=genome@markerPos[indexGenome],ypos = variantPos[indexVariants],xmap = genome@map[indexGenome]))
+    variantMap = c(variantMap,approx(x=genome$markerPos[indexGenome],xout = variantPos[indexVariants],y = genome$map[indexGenome]))
   }
   variantRecomb = as.numeric(unlist(tapply(variantMap,variantChrom,recombProbFromGeneticDistance)))
-  newGenome(name = genome@name,Nchrom = length(unique(variantChrom)),markerNames = variantNames,markerChrom = variantChrom,markerPos = variantPos,recombProbs =  variantRecomb,map = variantMap)
+  newGenome(name = genome$name,Nchrom = length(unique(variantChrom)),markerNames = variantNames,markerChrom = variantChrom,markerPos = variantPos,recombProbs =  variantRecomb,map = variantMap)
 }
+
