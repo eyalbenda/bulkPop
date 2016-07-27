@@ -1,4 +1,6 @@
 #' @import parallel
+
+#' @export
 initiateCluster<-function(ncores=7)
 {
   tryCatch(stopCluster(cl),error=function(e)print("starting new cluster"))

@@ -3,17 +3,26 @@
 
 
 #' @export
+c.individual = function(...)
+{
+  list(...)
+}
+#' @export
 is.individual = function(x)
   inherits(x,"individual")
 
 #' @export
 newIndividual = function(hap1,hap2,sex)
 {
-  if(!all(hap1 %in% c(0,1))|!all(hap2 %in% c(0,1)))
-    stop("haplotypes must be vectors of 0 and 1")
-  if(!sex %in% c(0,1,"m","f","male","female"))
+  if(!is.bit(hap1))
+    if(!all(hap1 %in% c(0,1)))
+      stop("haplotypes must be vectors of 0 and 1 or bit objects")
+  if(!is.bit(hap2))
+     if(!all(hap2 %in% c(0,1)))
+       stop("haplotypes must be vectors of 0 and 1 or bit objects")
+  if(!sex %in% c(0,1,"m","f","male","female",as.bit(0),as.bit(1)))
     stop("sex should be 0, 1, male, female, f or m")
-  if(sex %in% c("male","m","0"))
+  if(sex %in% c("male","m","0",as.bit(0)))
   {
     sex = as.bit(0)
   } else
@@ -83,7 +92,7 @@ recombineIndividual = function(individual,genome,Nrecombs=1)
 #' @export
 crossIndividuals = function(parent1,parent2,genome,zeelPeelSelection=T,sex = "random",Nrecombs = 1)
 {
-  if(!xor(parent1$sex,parent2$sex)) stop("Error: same-sex coupling doesn't exist for c. elegans")
+  if(as.logical(parent1$sex==parent2$sex)) stop("Error: same-sex coupling doesn't exist for c. elegans")
   recombParent1 = recombineIndividual(parent1,genome,Nrecombs)
   recombParent2 = recombineIndividual(parent2,genome,Nrecombs)
   newHap1 = bit(length(genome$markerChrom))
@@ -149,8 +158,8 @@ crossIndividuals = function(parent1,parent2,genome,zeelPeelSelection=T,sex = "ra
   {
     newHap2 = newHap2[-sexChromIndices]
   }
-  offspring = sample(list(newIndividual(hap1=newHap1,hap2=newHap2,sex=newSexBit),
-                       newIndividual(hap1=newHap2,hap2=newHap1,sex=newSexBit)),
+  offspring = sample(list(newIndividual(hap1=newHap1,hap2=newHap2,sex=newSex),
+                       newIndividual(hap1=newHap2,hap2=newHap1,sex=newSex)),
                      size=1)[[1]]
   return(offspring)
 }
@@ -158,7 +167,7 @@ crossIndividuals = function(parent1,parent2,genome,zeelPeelSelection=T,sex = "ra
 #' @export
 selfHermaphrodite = function(parent,genome,zeelPeelSelection=T,sex = "female",Nrecombs = 1)
 {
-  if(parent$sex!=1) stop("Error: attempting to self a male")
+  if(as.logical(parent$sex)!=1) stop("Error: attempting to self a male")
   alleleAmale = newIndividual(hap1 = parent$hap1[which(genome$markerChrom!="X")],
                               hap2 = parent$hap2,sex = "male")
   alleleBmale = newIndividual(hap1 = parent$hap2[which(genome$markerChrom!="X")],

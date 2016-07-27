@@ -4,9 +4,9 @@
 #' @export
 parseAllGenotypes = function(pop,genome,summarize=F)
 {
-  genotypeAndMarkerTable = data.frame(chrom = genome@markerChrom,
-                                      pos = genome@markerPos,
-                                      marker = genome@markerNames)
+  genotypeAndMarkerTable = data.frame(chrom = genome$markerChrom,
+                                      pos = genome$markerPos,
+                                      marker = genome$markerNames)
   genotypes = data.frame(matrix(nrow=nrow(genotypeAndMarkerTable),ncol=length(pop)))
   k = 1
   if(summarize)
@@ -18,18 +18,18 @@ parseAllGenotypes = function(pop,genome,summarize=F)
   {
     if(summarize)
     {
-      genos = as.numeric(slot(pop[[i]],paste("hap",1,sep=""))[[1]])
+      genos = as.numeric(pop[[i]][[paste("hap",1,sep="")]])
       genotypes[1:length(genos)] = genotypes[1:length(genos)] + genos
-      genos = as.numeric(slot(pop[[i]],paste("hap",2,sep=""))[[1]])
+      genos = as.numeric(pop[[i]][[paste("hap",2,sep="")]])
       genotypes[1:length(genos)] = genotypes[1:length(genos)] + genos
       Ngenotypes[1:length(genos)] = Ngenotypes[1:length(genos)] + 2
     } else
     {
       for(hap in 1:2)
       {
-        genos = as.numeric(slot(pop[[i]],paste("hap",hap,sep=""))[[1]])
+        genos = as.numeric(pop[[i]][[paste("hap",hap,sep="")]])
         if(length(genos)<nrow(genotypes)&pop[[i]]@sex==0)
-          genos = c(genos,rep(NA,sum(genome@markerChrom=="X")))
+          genos = c(genos,rep(NA,sum(genome$markerChrom=="X")))
         genotypes[,k] = genos
         k = k+1
       }
@@ -68,7 +68,7 @@ plotGenotypeAndMarkerTable = function(genotypeAndMarkerTable,calcFreqs=T,interna
 }
 
 #' @export
-plotGenotypeAndMarkerList = function(genotypeAndMarkerList,calcFreqs=T,chromPos = NULL, markers = NULL)
+plotGenotypeAndMarkerList = function(genotypeAndMarkerList,calcFreqs=T,chromPos = NULL, markers = NULL, internal =F)
 {
   dfAll = NULL
   for(curGen in genotypeAndMarkerList)
@@ -80,6 +80,8 @@ plotGenotypeAndMarkerList = function(genotypeAndMarkerList,calcFreqs=T,chromPos 
     dfAll = rbind(dfAll,
                   data.frame(generation = as.numeric(curGen$generation),plotGenotypeAndMarkerTable(curGen$genotypeAndMarkerTable,calcFreqs = calcFreqs,internal=T)))
   }
-  ggplot(dfAll,aes(x = pos,y=Frequency)) + geom_line() + ylim(c(0,1)) +
-    theme_bw() + scale_color_gradient2_tableau(palette="Light Red-Green") + facet_wrap(~chrom,nrow=1,scales = "free_x") + theme(axis.text.x = element_text(angle=90,hjust=1))
+  if(internal)
+    return(dfAll)
+  ggplot(dfAll,aes(x = pos,y=Frequency,color = generation)) + geom_line() + ylim(c(0,1)) +
+    theme_bw() + scale_color_gradient_tableau(palette="Light Red-Green") + facet_wrap(~chrom,nrow=1,scales = "free_x") + theme(axis.text.x = element_text(angle=90,hjust=1))
 }
