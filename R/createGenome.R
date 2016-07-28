@@ -52,7 +52,6 @@ expandGenomeToVariantlist = function(genome,variantNames = NULL,variantChrom,var
     indexVariants = which(variantChrom==chrom)
     variantMap = c(variantMap,approx(x=genome$markerPos[indexGenome],xout = variantPos[indexVariants],y = genome$map[indexGenome],rule=2)$y)
   }
-  print(length(variantChrom))
   variantRecomb = as.numeric(unlist(tapply(variantMap,variantChrom,recombProbFromGeneticDistance)))
   newGenome(name = genome$name,Nchrom = length(unique(variantChrom)),markerNames = variantNames,markerChrom = variantChrom,markerPos = variantPos,recombProbs =  variantRecomb,map = variantMap)
 }
