@@ -1,7 +1,5 @@
 #' @import qtl
 #' @import bit
-
-
 #' @export
 c.individual = function(...)
 {
@@ -12,14 +10,24 @@ is.individual = function(x)
   inherits(x,"individual")
 
 #' @export
-newIndividual = function(hap1,hap2,sex)
+newIndividual = function(genome,genotype = NULL, hap1 = NULL,hap2 = NULL,sex)
 {
-  if(!is.bit(hap1))
-    if(!all(hap1 %in% c(0,1)))
-      stop("haplotypes must be vectors of 0 and 1 or bit objects")
-  if(!is.bit(hap2))
-     if(!all(hap2 %in% c(0,1)))
-       stop("haplotypes must be vectors of 0 and 1 or bit objects")
+  if(!is.genome(genome))
+    stop("function requires a genome object")
+  if(!xor(is.null(genotype),(is.null(hap1)|is.null(hap2))))
+    stop("Individual should either have a genotype(0 - hom, 1 - hom, 2 - het) or two haplotypes")
+  if(is.null(genotype))
+  {
+    if(!is.bit(hap1))
+      if(!all(hap1 %in% c(0,1)))
+        stop("haplotypes must be vectors of 0 and 1 or bit objects")
+    if(!is.bit(hap2))
+      if(!all(hap2 %in% c(0,1)))
+        stop("haplotypes must be vectors of 0 and 1 or bit objects")
+  } else if (!genotype %in% c(0,1,2) | length(genotype)!=1)
+  {
+    stop("genotype should be either 0 for homozygote,1 for homozygot, or 2 for heterozygote")
+  }
   if(!sex %in% c(0,1,"m","f","male","female",as.bit(0),as.bit(1)))
     stop("sex should be 0, 1, male, female, f or m")
   if(sex %in% c("male","m","0",as.bit(0)))
@@ -31,7 +39,27 @@ newIndividual = function(hap1,hap2,sex)
   }
   # if(!is.list(hap1)|!is.list(hap2)|!is.list(sex))
   #   stop("hap1, hap2 and sex must all be lists")
-  structure(list(hap1 = as.bit(hap1), hap2 = as.bit(hap2),sex = sex),class = "individual")
+  if(is.null(genotype))
+  {
+    ind = structure(list(hap1 = as.bit(hap1), hap2 = as.bit(hap2),sex = sex),class = "individual")
+  } else if (genotype==0)
+  {
+    ind = structure(list(hap1 = as.bit(rep(0,length(genome$markerChrom))), hap2 = as.bit(rep(0,length(genome$markerChrom)),sex = sex)),class = "individual")
+  } else if (genotype==1)
+  {
+    ind = structure(list(hap1 = as.bit(rep(1,length(genome$markerChrom))), hap2 = as.bit(rep(1,length(genome$markerChrom)),sex = sex)),class = "individual")
+  } else
+  {
+    hap1 = as.bit(rep(0,length(genome$markerChrom)))
+    hap2 = as.bit(rep(1,length(genome$markerChrom)))
+    ind = sample(c(structure(list(hap1 = hap1, hap2 = hap2,sex = sex),class = "individual"),
+                   structure(list(hap1 = hap2, hap2 = hap1,sex = sex),class = "individual")),size=1)[[1]]
+  }
+  if(!as.logical.bit(sex))
+  {
+    ind$hap2 = as.bit(rev(rev(ind$hap2)[-c(1:sum(genome$markerChrom=="X"))]))
+  }
+  return(ind)
 }
 
 #' @export
