@@ -41,7 +41,7 @@ newIndividual = function(genome,genotype = NULL, hap1 = NULL,hap2 = NULL,sex)
   #   stop("hap1, hap2 and sex must all be lists")
   if(is.null(genotype))
   {
-    ind = structure(list(hap1 = as.bit(hap1), hap2 = as.bit(hap2),sex = sex),class = "individual")
+    return(structure(list(hap1 = as.bit(hap1), hap2 = as.bit(hap2),sex = sex),class = "individual"))
   } else if (genotype==0)
   {
     ind = structure(list(hap1 = as.bit(rep(0,length(genome$markerChrom))), hap2 = as.bit(rep(0,length(genome$markerChrom)),sex = sex)),class = "individual")
@@ -58,6 +58,10 @@ newIndividual = function(genome,genotype = NULL, hap1 = NULL,hap2 = NULL,sex)
   if(!as.logical.bit(sex))
   {
     ind$hap2 = as.bit(rev(rev(ind$hap2)[-c(1:sum(genome$markerChrom=="X"))]))
+    ind$sex = as.bit(0)
+  } else
+  {
+    ind$sex = as.bit(1)
   }
   return(ind)
 }
@@ -93,7 +97,7 @@ recombineIndividual = function(individual,genome,Nrecombs=1)
 {
   if(!is.individual(individual))
     stop("individual given must be a proper individual")
-  if(individual$sex)
+  if(as.logical.bit(individual$sex))
   {
     if(length(individual$hap1)!=length(individual$hap2))
       stop("Specified female, but different haplotype lengths")
@@ -110,8 +114,10 @@ recombineIndividual = function(individual,genome,Nrecombs=1)
     recombSpot = sample(chromIndices[-length(chromIndices)],size = Nrecombs,prob = genome$recombProbs[chromIndices[-length(chromIndices)]])
     newHap1 = as.bit(c(individual$hap1[min(chromIndices):recombSpot],individual$hap2[(recombSpot+1):max(chromIndices)]))
     newHap2 = as.bit(c(individual$hap2[min(chromIndices):recombSpot],individual$hap1[(recombSpot+1):max(chromIndices)]))
-    individual$hap1[chromIndices] = newHap1
-    individual$hap2[chromIndices] = newHap2
+    newHaps = list(newHap1,newHap2)
+    ord = sample(1:2,size=2)
+    individual$hap1[chromIndices] = newHaps[[ord[1]]]
+    individual$hap2[chromIndices] = newHaps[[ord[2]]]
   }
   return(individual)
 }
@@ -123,82 +129,53 @@ crossIndividuals = function(parent1,parent2,genome,zeelPeelSelection=T,sex = "ra
   if(as.logical(parent1$sex==parent2$sex)) stop("Error: same-sex coupling doesn't exist for c. elegans")
   recombParent1 = recombineIndividual(parent1,genome,Nrecombs)
   recombParent2 = recombineIndividual(parent2,genome,Nrecombs)
-  newHap1 = bit(length(genome$markerChrom))
-  newHap2 = bit(length(genome$markerChrom))
-  chosenFrom1 = NULL
-  chosenFrom2 = NULL
-  autosomes = rev(rev(unique(genome$markerChrom))[-1])
-  for(chrom in autosomes)
-  {
-    chromIndices = which(genome$markerChrom==chrom)
-    from1 = sample(1:2,size = 1)
-    from2 = sample(1:2,size = 1)
-    hapOrder =sample(1:2, size = 1)
-
-    if(hapOrder == 1)
-    {
-      newHap1[chromIndices] = recombParent1[[paste("hap",from1,sep="")]][chromIndices]
-      newHap2[chromIndices] = recombParent2[[paste("hap",from2,sep="")]][chromIndices]
-    } else
-    {
-      newHap1[chromIndices] = recombParent2[[paste("hap",from2,sep="")]][chromIndices]
-      newHap2[chromIndices] = recombParent1[[paste("hap",from1,sep="")]][chromIndices]
-    }
-
-
-    chosenFrom1 = c(chosenFrom1,from1)
-    chosenFrom2 = c(chosenFrom2,from2)
-  }
-  chosenFrom = list(chosenFrom1,chosenFrom2)
-  sexes = as.logical(c(parent1$sex,parent2$sex))
-  parentsCombined = list(recombParent1,recombParent2)
-  femPar = which(sexes)
-  if(zeelPeelSelection)
-  {
-    if(!exists("zeelPeelMarker")|!exists("zeelPeelKill")) stop(c("zeelPeelMarker or zeelPeelKill undefined, can't perform selection"))
-    zeelPeel = 0
-    if(as.logical(getGenotypes(parentsCombined[[femPar]],genome,haplotype = chosenFrom[[femPar]][1], name = zeelPeelMarker)==zeelPeelKill))
-      zeelPeel = zeelPeel+1
-    if(as.logical(xor(getGenotypes(parentsCombined[[-femPar]],genome,1,name = zeelPeelMarker)==zeelPeelKill,
-           getGenotypes(parentsCombined[[-femPar]],genome,2,name = zeelPeelMarker)==zeelPeelKill)))
-    {
-      if(as.logical(getGenotypes(parentsCombined[[-femPar]],genome,chosenFrom[[-femPar]][1],name = zeelPeelMarker)==zeelPeelKill))
-        zeelPeel = zeelPeel + 1
-    }
-    if(zeelPeel == 2) return("dead")
-  }
   if(sex == "random")
   {
-    newSex = sample(c("male","female"),size = 1)
+    sex = sample(c("male","female"),size=1)
+  }
+  sexes = as.logical.bit(c(recombParent1$sex,recombParent2$sex))
+  r1l = sapply(recombParent1[1:2],length)
+  r2l = sapply(recombParent2[1:2],length)
+  if(sex == "female")
+  {
+    chosenFrom = c(which.max(r1l),which.max(r2l))
   } else
   {
-    newSex = sex
+    chosenFrom = c(which.min(r1l),which.min(r2l))
   }
-  chooseFemHap = sample(c(1,2),size=1)
-  sexChromIndices = which(genome$markerChrom=="X")
-  XchromMale = list(getGenotypes(parentsCombined[[-femPar]],genome,1,names = genome$markerNames[genome$markerChrom=="X"]),
-              getGenotypes(parentsCombined[[-femPar]],genome,2,names = genome$markerNames[genome$markerChrom=="X"]))
-  newHap1[sexChromIndices] = getGenotypes(parentsCombined[[femPar]],genome,chooseFemHap,names = genome$markerNames[genome$markerChrom=="X"])
-  if(newSex == "female")
-  {
-    newHap2[sexChromIndices] = as.bit(XchromMale[!sapply(XchromMale,is.null)][[1]])
-  } else
-  {
-    newHap2 = newHap2[-sexChromIndices]
-  }
-  offspring = sample(list(newIndividual(hap1=newHap1,hap2=newHap2,sex=newSex),
-                       newIndividual(hap1=newHap2,hap2=newHap1,sex=newSex)),
-                     size=1)[[1]]
-  return(offspring)
+  newHap1 = recombParent1[[chosenFrom[1]]]
+  newHap2 = recombParent2[[chosenFrom[2]]]
+  if(zeelPeelSelection)
+    if(zeelPeel(genome,parent1,parent2,sexes,chosenFrom))
+      return("dead")
+  return(newIndividual(genome = genome,hap1 = newHap1,hap2 = newHap2,sex=sex))
 }
+
+zeelPeel = function(genome,parent1,parent2,sexes,chosenFrom)
+{
+  parentsCombined = list(parent1,parent2)
+  femPar = which(sexes)
+  if(!exists("zeelPeelMarker")|!exists("zeelPeelKill")) stop(c("zeelPeelMarker or zeelPeelKill undefined, can't perform selection"))
+  zeelPeel = 0
+  if(as.logical(getGenotypes(parentsCombined[[femPar]],genome,haplotype = chosenFrom[[femPar]][1], name = zeelPeelMarker)==zeelPeelKill))
+    zeelPeel = zeelPeel+1
+  if(as.logical(xor(getGenotypes(parentsCombined[[-femPar]],genome,1,name = zeelPeelMarker)==zeelPeelKill,
+                    getGenotypes(parentsCombined[[-femPar]],genome,2,name = zeelPeelMarker)==zeelPeelKill)))
+    {
+      if(as.logical(getGenotypes(parentsCombined[[-femPar]],genome,chosenFrom[[-femPar]],name = zeelPeelMarker)==zeelPeelKill))
+        zeelPeel = zeelPeel + 1
+    }
+  return(zeelPeel == 2)
+}
+
 
 #' @export
 selfHermaphrodite = function(parent,genome,zeelPeelSelection=T,sex = "female",Nrecombs = 1)
 {
   if(as.logical(parent$sex)!=1) stop("Error: attempting to self a male")
-  alleleAmale = newIndividual(hap1 = parent$hap1[which(genome$markerChrom!="X")],
+  alleleAmale = newIndividual(genome = genome,hap1 = parent$hap1[which(genome$markerChrom!="X")],
                               hap2 = parent$hap2,sex = "male")
-  alleleBmale = newIndividual(hap1 = parent$hap2[which(genome$markerChrom!="X")],
+  alleleBmale = newIndividual(genome = genome,hap1 = parent$hap2[which(genome$markerChrom!="X")],
                               hap2 = parent$hap1,sex = "male")
   coin = sample(1:2)[1]
   if(coin==1)
