@@ -82,10 +82,10 @@ expandGenomeToVariantlist = function(genome,variantNames = NULL,variantChrom,var
   variantRecomb = as.numeric(unlist(tapply(variantMap,variantChrom,recombProbFromGeneticDistance)))
   newGenome(name = genome$name,Nchrom = length(unique(variantChrom)),markerNames = variantNames,markerChrom = variantChrom,markerPos = variantPos,recombProbs =  variantRecomb,map = variantMap)
 }
-
+#' @export
 getAndUpdateRecombSpot = function(genome,chrom)
 {
-  out = genome$.recombInd[[chrom]]
+  out = unlist(genome$.recombInd[[chrom]],use.names = F)
   if (genome$.recombInd[[chrom]] == genome$.Nrecs)
   {
     genome$.recombInd[[chrom]] = 1
@@ -93,5 +93,5 @@ getAndUpdateRecombSpot = function(genome,chrom)
   {
     genome$.recombInd[[chrom]] = unlist(genome$.recombInd[[chrom]]) + 1
   }
-  return(genome$.recombPos[[chrom]][out])
+  return(unlist(genome$.recombPos[[chrom]],use.names = F)[out])
 }

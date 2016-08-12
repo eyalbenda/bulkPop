@@ -33,7 +33,7 @@ performMating = function(males,females,genome,offPerMating,ncores = 1,...)
 }
 
 #' @export
-getMatingSubpopulation = function(genome,pop,matingFrac,fitnessLoci,sex=c("male","female"))
+getMatingSubpopulation = function(genome,pop,matingFrac,fitnessLoci = NULL,sex=c("male","female"))
 {
   newPop = list()
   sexPop = sapply(pop,function(x)x$sex)
@@ -44,7 +44,10 @@ getMatingSubpopulation = function(genome,pop,matingFrac,fitnessLoci,sex=c("male"
   {
     choos = which(sexPop==1)
   }
-  if(any(fitnessLoci$sex==sex))
+  if(is.null(fitnessLoci))
+  {
+    mateProb = rep(1,length(choos))
+  } else if(any(fitnessLoci$sex==sex))
   {
     mateProb = getIndividualMatingProbabilities(pop[choos],fitnessLoci[fitnessLoci$sex==sex,],genome)
   } else

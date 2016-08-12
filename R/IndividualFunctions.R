@@ -102,30 +102,21 @@ recombineIndividual = function(individual,genome,Nrecombs=1)
 {
   if(!is.individual(individual))
     stop("individual given must be a proper individual")
-  if(as.logical.bit(individual$sex))
-  {
-    if(length(individual$hap1)!=length(individual$hap2))
-      stop("Specified female, but different haplotype lengths")
-    recombChroms = keys(genome$.chromRanges)
-  } else
-  {
-    if(length(individual$hap1)==length(individual$hap2))
-      stop("Specified male, but different haplotype lengths")
-    recombChroms = rev(rev(keys(genome$.chromRanges))[-1])
-  }
+  chromLast = as.matrix(unlist(values(genome$.chromRanges)))[2,]
+  recombChroms = keys(genome$.chromRanges)[chromLast<length(individual$hap1)&chromLast<length(individual$hap2)]
+  newHap1 = individual$hap1
+  newHap2 = individual$hap2
   for(chrom in recombChroms)
   {
     chromIndices = unlist(genome$.chromRanges[[chrom]],use.names = F)
     recombSpot = getAndUpdateRecombSpot(genome,chrom)
-    newHap1 = c(individual$hap1[chromIndices[1]:recombSpot],
-                       individual$hap2[(recombSpot+1):chromIndices[2]])
-    newHap2 = c(individual$hap2[chromIndices[1]:recombSpot],
-                       individual$hap1[(recombSpot+1):chromIndices[2]])
-    newHaps = list(newHap1,newHap2)
-    ord = sample(1:2,size=2)
-    individual$hap1[chromIndices[1]:chromIndices[2]] = newHaps[[ord[1]]]
-    individual$hap2[chromIndices[1]:chromIndices[2]] = newHaps[[ord[2]]]
-  }
+    newHap1[chromIndices[1]:recombSpot] = individual$hap2[chromIndices[1]:recombSpot]
+    newHap2[chromIndices[1]:recombSpot] = individual$hap1[chromIndices[1]:recombSpot]
+    }
+  newHaps = list(newHap1,newHap2)
+  ord = sample(1:2,size=2)
+  individual$hap1 = newHaps[[ord[1]]]
+  individual$hap2 = newHaps[[ord[2]]]
   return(individual)
 }
 

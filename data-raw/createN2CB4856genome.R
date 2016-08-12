@@ -1,5 +1,7 @@
 library(qtl)
 require(bit)
+require(hash)
+require(nnet)
 
 load(url('https://github.com/AndersenLab/N2xCB4856-RIAILS/blob/master/data/N2xCB4856_RIAILs_Rqtlfiles.RData?raw=true'))
 #this loads an R/QTL object called N2xCB4856.cross
@@ -15,5 +17,7 @@ elegansNames = names(elegansMap)
 recombProbsHawaiiN2 = as.numeric(unlist(tapply(elegansMap,elegansChrom,recombProbFromGeneticDistance)))
 N2xCB4856.genome = newGenome(name = "N2xCB4856",Nchrom = 6, markerNames = elegansNames,markerChrom = elegansChrom,markerPos = elegansPos, recombProbs = recombProbsHawaiiN2, map = elegansMap,Nrecs = 10000)
 N2 = newIndividual(N2xCB4856.genome,1,sex="f")
-system.time(sapply(1:100000,function(x)recombineIndividual(N2,N2xCB4856.genome)))
+Hawaii = newIndividual(N2xCB4856.genome,0,sex="m")
+system.time(sapply(1:10000,function(x)crossIndividuals(N2,Hawaii,N2xCB4856.genome,zeelPeel = zeelPeel)))
 
+zeelPeel = list(marker = findProxyForPosition(N2xCB4856.genome,"I",2350468),kill = 0)
