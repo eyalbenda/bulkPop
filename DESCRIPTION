@@ -1,11 +1,11 @@
 Package: bulkPop
 Type: Package
 Title: Simulate a propogating population with a set of genetic variants
-Version: 0.1.2
+Version: 0.2
 Author: Eyal Ben-David
-Maintainer: Dave Knull <dev@null.net>
-Description: The package includes functions to build a genome object, that include variants, their physical and genetic positions, and names, and based on this object create and propagate a population.It is built specifically for c. elegans, and the recombination and cross functions are built to handle elegans genome structure with regards to sex chromosomes (xx/x0) and zeel-1/peel-1 selection, which is baked it.
-License: MIT
+Maintainer: Eyal Ben-David <ebd@ucla.edu>
+Description: The package includes functions to build a genome object, that include variants, their physical and genetic positions, and names, and based on this object create and propagate a population.It is built specifically for c. elegans, and the recombination and cross functions are built to handle elegans genome structure with regards to sex chromosomes (xx/x0) and zeel-1/peel-1 selection, which is baked in.
+License: MIT + file LICENSE
 LazyData: TRUE
 Depends:
     R (>= 2.10)
@@ -15,6 +15,8 @@ Imports:
     ggthemes,
     qtl,
     parallel,
+    nnet,
+    hash,
     Rcpp (>= 0.12.5)
 LinkingTo: Rcpp
 RoxygenNote: 5.0.1

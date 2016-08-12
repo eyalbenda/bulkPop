@@ -13,5 +13,7 @@ elegansPos= newCrossData$WS244.pos[match(names(elegansMap),newCrossData$id)]
 elegansChrom= as.character(newCrossData$chr[match(names(elegansMap),newCrossData$id)])
 elegansNames = names(elegansMap)
 recombProbsHawaiiN2 = as.numeric(unlist(tapply(elegansMap,elegansChrom,recombProbFromGeneticDistance)))
-N2xCB4856.genome = newGenome(name = "N2xCB4856",Nchrom = 6, markerNames = elegansNames,markerChrom = elegansChrom,markerPos = elegansPos, recombProbs = recombProbsHawaiiN2, map = elegansMap)
+N2xCB4856.genome = newGenome(name = "N2xCB4856",Nchrom = 6, markerNames = elegansNames,markerChrom = elegansChrom,markerPos = elegansPos, recombProbs = recombProbsHawaiiN2, map = elegansMap,Nrecs = 10000)
+N2 = newIndividual(N2xCB4856.genome,1,sex="f")
+system.time(sapply(1:100000,function(x)recombineIndividual(N2,N2xCB4856.genome)))
 

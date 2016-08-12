@@ -50,6 +50,7 @@ parseAllGenotypes = function(pop,genome,summarize=F)
 plotGenotypeAndMarkerTable = function(genotypeAndMarkerTable,calcFreqs=T,internal = F)
 {
   chroms = unique(genotypeAndMarkerTable$chrom)
+
   if(calcFreqs)
   {
     freqs = rowMeans(genotypeAndMarkerTable[,-c(1:3)],na.rm = T)

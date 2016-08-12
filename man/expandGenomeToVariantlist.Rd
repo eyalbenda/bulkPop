@@ -2,7 +2,7 @@
 % Please edit documentation in R/createGenome.R
 \name{expandGenomeToVariantlist}
 \alias{expandGenomeToVariantlist}
-\title{The function expands a}
+\title{The function extends a genome to more variants, by imputing the genetic map in between}
 \usage{
 expandGenomeToVariantlist(genome, variantNames = NULL, variantChrom,
   variantPos, matchNames = F)
@@ -19,6 +19,6 @@ expandGenomeToVariantlist(genome, variantNames = NULL, variantChrom,
 \item{matchNames}{boolean: If true, the function will look for the new variants by position in the old genome and carry over the names to the new genome.}
 }
 \description{
-The function expands a
+The function extends a genome to more variants, by imputing the genetic map in between
 }
 
