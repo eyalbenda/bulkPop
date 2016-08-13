@@ -67,7 +67,7 @@ newIndividual = function(genome,genotype = NULL, hap1 = NULL,hap2 = NULL,sex)
   }
   if(!as.logical.bit(sex))
   {
-    ind$hap2 = as.bit(rev(rev(ind$hap2)[-c(1:sum(genome$markerChrom=="X"))]))
+    ind$hap2 = ind$hap2[-which(genome$markerChrom=="X")]
     ind$sex = as.bit(0)
   } else
   {
@@ -103,7 +103,7 @@ recombineIndividual = function(individual,genome,Nrecombs=1)
   if(!is.individual(individual))
     stop("individual given must be a proper individual")
   chromLast = as.matrix(unlist(values(genome$.chromRanges)))[2,]
-  recombChroms = keys(genome$.chromRanges)[chromLast<length(individual$hap1)&chromLast<length(individual$hap2)]
+  recombChroms = keys(genome$.chromRanges)[chromLast<=length(individual$hap1)&chromLast<=length(individual$hap2)]
   newHap1 = individual$hap1
   newHap2 = individual$hap2
   for(chrom in recombChroms)

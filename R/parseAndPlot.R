@@ -7,40 +7,19 @@ parseAllGenotypes = function(pop,genome,summarize=F)
   genotypeAndMarkerTable = data.frame(chrom = genome$markerChrom,
                                       pos = genome$markerPos,
                                       marker = genome$markerNames)
-  genotypes = data.frame(matrix(nrow=nrow(genotypeAndMarkerTable),ncol=length(pop)))
-  k = 1
+  suppressWarnings(hap1 <- do.call(cbind,lapply(pop,function(x)as.numeric(x$hap1))))
+  suppressWarnings(hap2 <- do.call(cbind,lapply(pop,function(x)as.numeric(x$hap2))))
   if(summarize)
   {
-    genotypes = vector("numeric",length = nrow(genotypeAndMarkerTable))
-    Ngenotypes = vector("numeric",length = nrow(genotypeAndMarkerTable))
-  }
-  for(i in 1:length(pop))
-  {
-    if(summarize)
-    {
-      genos = as.numeric(pop[[i]][[paste("hap",1,sep="")]])
-      genotypes[1:length(genos)] = genotypes[1:length(genos)] + genos
-      genos = as.numeric(pop[[i]][[paste("hap",2,sep="")]])
-      genotypes[1:length(genos)] = genotypes[1:length(genos)] + genos
-      Ngenotypes[1:length(genos)] = Ngenotypes[1:length(genos)] + 2
-    } else
-    {
-      for(hap in 1:2)
-      {
-        genos = as.numeric(pop[[i]][[paste("hap",hap,sep="")]])
-        if(length(genos)<nrow(genotypes)&pop[[i]]@sex==0)
-          genos = c(genos,rep(NA,sum(genome$markerChrom=="X")))
-        genotypes[,k] = genos
-        k = k+1
-      }
-    }
-  }
-  if(summarize)
-  {
-    genotypeAndMarkerTable = data.frame(genotypeAndMarkerTable,genotypes = genotypes/Ngenotypes)
+    genotypeAndMarkerTable["genotypes"] = (rowMeans(hap1,na.rm = T) + rowMeans(hap2,na.rm=T)) / 2
   } else
   {
-    genotypeAndMarkerTable = cbind(genotypeAndMarkerTable,genotypes)
+    outTable = matrix(nrow = nrow(hap1),ncol=ncol(hap1)+ncol(hap2))
+    outTable[,seq(1,ncol(outTable),2)] = hap1
+    outTable[,seq(2,ncol(outTable),2)] = hap2
+    colnames(outTable)[seq(1,ncol(outTable),2)] = paste(1:ncol(hap1),"hap1",sep="_")
+    colnames(outTable)[seq(2,ncol(outTable),2)] = paste(1:ncol(hap2),"hap2",sep="_")
+    genotypeAndMarkerTable = cbind(genotypeAndMarkerTable,outTable)
   }
   genotypeAndMarkerTable
 }
