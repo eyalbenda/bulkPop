@@ -16,8 +16,13 @@ elegansChrom= as.character(newCrossData$chr[match(names(elegansMap),newCrossData
 elegansNames = names(elegansMap)
 recombProbsHawaiiN2 = as.numeric(unlist(tapply(elegansMap,elegansChrom,recombProbFromGeneticDistance)))
 N2xCB4856.genome = newGenome(name = "N2xCB4856",Nchrom = 6, markerNames = elegansNames,markerChrom = elegansChrom,markerPos = elegansPos, recombProbs = recombProbsHawaiiN2, map = elegansMap,Nrecs = 10000)
-N2 = newIndividual(N2xCB4856.genome,1,sex="f")
-Hawaii = newIndividual(N2xCB4856.genome,0,sex="m")
-system.time(sapply(1:10000,function(x)crossIndividuals(N2,Hawaii,N2xCB4856.genome,zeelPeel = zeelPeel)))
 
+genome = N2xCB4856.genome
+onlyV = N2xCB4856.genome$markerChrom=="V"
+genome = expandGenomeToVariantlist(N2xCB4856.genome, N2xCB4856.genome$markerNames[onlyV],N2xCB4856.genome$markerChrom[onlyV],N2xCB4856.genome$markerPos[onlyV],matchNames = T)
+
+N2 = newIndividual(genome,1,sex="f")
+Hawaii = newIndividual(genome,0,sex="m")
+system.time(sapply(1:10000,function(x)crossIndividuals(N2,Hawaii,N2xCB4856.genome,zeelPeel = zeelPeel)))
+f1n = crossIndividuals(N2,Hawaii,genome)
 zeelPeel = list(marker = findProxyForPosition(N2xCB4856.genome,"I",2350468),kill = 0)

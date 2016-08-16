@@ -3,32 +3,39 @@
 #' @import nnet
 #' @import parallel
 #' @importFrom stats rnorm
-#' @export
+
+matePop = function(x,females,males,offPerMating,genome,Nrecombs,zeelPeel)
+{
+  curMale = sample(males,size = 1)[[1]]
+  curFemale = females[[x]]
+  numOffspring = max(1,round(rnorm(1,offPerMating,1)))
+  newPop = list()
+  for(k in 1:offPerMating)
+  {
+    newInd = crossIndividuals(parent1 = curMale, parent2 = curFemale,genome = genome,Nrecombs = Nrecombs,zeelPeel = zeelPeel,sex = "random")
+    if(!is.character(newInd))
+      newPop = c(newPop,list(newInd))
+  }
+  newPop
+}
 
 #' @export
-performMating = function(males,females,genome,offPerMating,ncores = 1,...)
+performMating = function(males,females,genome,offPerMating,ncores = 1,Nrecombs = 1,...)
 {
-  cl = initiateCluster(ncores = ncores)
   if(!exists("zeelPeel"))
     zeelPeel = NULL
-  clusterCall(cl,function(x)library(bulkPop))
-  clusterExport(cl,c("genome","offPerMating","males","females","zeelPeel"),
-                envir = environment())
-  bigPop = parLapply(cl,1:length(females),function(x)
+  if(ncores>1)
   {
-    curMale = sample(males,size = 1)[[1]]
-    curFemale = females[[x]]
-    numOffspring = max(1,round(rnorm(1,offPerMating,1)))
-    newPop = list()
-    for(k in 1:offPerMating)
-    {
-      newInd = crossIndividuals(parent1 = curMale, parent2 = curFemale,genome = genome,Nrecombs=1,zeelPeel = zeelPeel)
-      if(!is.character(newInd))
-        newPop = c(newPop,list(newInd))
-    }
-    newPop
-  })
-  stopCluster(cl)
+    cl = initiateCluster(ncores = ncores)
+    clusterCall(cl,function(x)library(bulkPop))
+    clusterExport(cl,c("genome","offPerMating","males","females","zeelPeel"),
+                  envir = environment())
+    bigPop = parLapply(cl,1:length(females),matePop,females,males,offPerMating,genome,Nrecombs,zeelPeel)
+    stopCluster(cl)
+  } else
+  {
+    bigPop = lapply(1:length(females),matePop,females,males,offPerMating,genome,Nrecombs,zeelPeel=zeelPeel)
+  }
   unlist(bigPop,recursive=F,use.names=F)
 }
 
