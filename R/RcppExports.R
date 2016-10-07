@@ -5,3 +5,7 @@ portMap <- function(xpos, ypos, xmap) {
     .Call('bulkPop_portMap', PACKAGE = 'bulkPop', xpos, ypos, xmap)
 }
 
+summarizePop <- function(hapPop, maxLength) {
+    .Call('bulkPop_summarizePop', PACKAGE = 'bulkPop', hapPop, maxLength)
+}
+

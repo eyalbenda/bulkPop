@@ -24,5 +24,5 @@ genome = expandGenomeToVariantlist(N2xCB4856.genome, N2xCB4856.genome$markerName
 N2 = newIndividual(genome,1,sex="f")
 Hawaii = newIndividual(genome,0,sex="m")
 system.time(sapply(1:10000,function(x)crossIndividuals(N2,Hawaii,N2xCB4856.genome,zeelPeel = zeelPeel)))
-f1n = crossIndividuals(N2,Hawaii,genome)
+f1n = rep(list(crossIndividuals(N2,Hawaii,genome,sex = 0)),100)
 zeelPeel = list(marker = findProxyForPosition(N2xCB4856.genome,"I",2350468),kill = 0)

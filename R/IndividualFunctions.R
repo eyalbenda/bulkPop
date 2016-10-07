@@ -103,15 +103,17 @@ recombineIndividual = function(individual,genome,Nrecombs=1)
   if(!is.individual(individual))
     stop("individual given must be a proper individual")
   chromLast = as.matrix(unlist(values(genome$.chromRanges)))[2,]
-  recombChroms = keys(genome$.chromRanges)[chromLast<=length(individual$hap1)&chromLast<=length(individual$hap2)]
+  whichRecomb = chromLast<=length(individual$hap1)&chromLast<=length(individual$hap2)
+  recombChroms = keys(genome$.chromRanges)[whichRecomb]
   newHap1 = individual$hap1
   newHap2 = individual$hap2
   for(chrom in recombChroms)
   {
     chromIndices = unlist(genome$.chromRanges[[chrom]],use.names = F)
     recombSpot = getAndUpdateRecombSpot(genome,chrom)
-    newHap1[chromIndices[1]:recombSpot] = individual$hap2[chromIndices[1]:recombSpot]
-    newHap2[chromIndices[1]:recombSpot] = individual$hap1[chromIndices[1]:recombSpot]
+    recombIndices = sample(list(chromIndices[1]:recombSpot,recombSpot:chromIndices[2]),size = 1)[[1]]
+    newHap1[recombIndices] = individual$hap2[recombIndices]
+    newHap2[recombIndices] = individual$hap1[recombIndices]
     }
   newHaps = list(newHap1,newHap2)
   ord = sample(1:2,size=2)
@@ -146,8 +148,9 @@ crossIndividuals = function(parent1,parent2,genome,zeelPeel=NULL,sex = "random",
     chosenFrom = c(which.is.max(-r1l),
                    which.is.max(-r2l))
   }
-  newHap1 = recombParent1[[chosenFrom[1]]]
-  newHap2 = recombParent2[[chosenFrom[2]]]
+  ord = sample(1:2)
+  assign(paste("newHap",ord[1],sep=""),recombParent1[[chosenFrom[1]]])
+  assign(paste("newHap",ord[2],sep=""),recombParent2[[chosenFrom[2]]])
   if(!is.null(zeelPeel))
     if(zeelPeelSelection(genome,recombParent1,recombParent2,sexes,chosenFrom,zeelPeel))
       return("dead")

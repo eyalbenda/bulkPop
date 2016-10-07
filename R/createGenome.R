@@ -58,6 +58,10 @@ recombProbFromGeneticDistance = function(distances){
 #' @export
 expandGenomeToVariantlist = function(genome,variantNames = NULL,variantChrom,variantPos,matchNames = F)
 {
+  if(!is.character(variantChrom))
+    stop("variantChrom must be character vector!")
+  if(!is.numeric(variantPos))
+    stop("variantPos must be a numeric vector!")
   if(any(!unique(variantChrom) %in% unique(genome$markerChrom)))
     stop("variants in chromosomes that don't exist in supplied genome!")
   if(is.null(variantNames))

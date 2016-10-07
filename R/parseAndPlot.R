@@ -1,5 +1,7 @@
 #' @import ggplot2
 #' @import ggthemes
+#' @useDynLib bulkPop
+
 
 #' @export
 parseAllGenotypes = function(pop,genome,summarize=F)
@@ -7,18 +9,21 @@ parseAllGenotypes = function(pop,genome,summarize=F)
   genotypeAndMarkerTable = data.frame(chrom = genome$markerChrom,
                                       pos = genome$markerPos,
                                       marker = genome$markerNames)
-  suppressWarnings(hap1 <- do.call(cbind,lapply(pop,function(x)as.numeric(x$hap1))))
-  suppressWarnings(hap2 <- do.call(cbind,lapply(pop,function(x)as.numeric(x$hap2))))
+  hap1 = lapply(pop,function(x)as.logical(x$hap1))
+  hap2 = lapply(pop,function(x)as.logical(x$hap2))
   if(summarize)
   {
-    genotypeAndMarkerTable["genotypes"] = (rowMeans(hap1,na.rm = T) + rowMeans(hap2,na.rm=T)) / 2
+    hap1 = summarizePop(hap1,max(sapply(hap1,length)))
+    hap2 = summarizePop(hap2,max(sapply(hap2,length)))
+    genotypeAndMarkerTable["genotypes"] = (hap1 + hap2) / 2
   } else
   {
-    outTable = matrix(nrow = nrow(hap1),ncol=ncol(hap1)+ncol(hap2))
-    outTable[,seq(1,ncol(outTable),2)] = hap1
-    outTable[,seq(2,ncol(outTable),2)] = hap2
-    colnames(outTable)[seq(1,ncol(outTable),2)] = paste(1:ncol(hap1),"hap1",sep="_")
-    colnames(outTable)[seq(2,ncol(outTable),2)] = paste(1:ncol(hap2),"hap2",sep="_")
+    targetLengths = max(c(lengths(hap1),lengths(hap2)))
+    outTable = matrix(nrow = targetLengths,ncol=length(hap1)+length(hap2),dimnames = list(1:targetLengths,1:(length(hap1)*2)))
+    outTable[,seq(1,ncol(outTable),2)] = do.call(rbind,lapply(hap1,function(x){length(x) = targetLengths;as.numeric(x)}))
+    outTable[,seq(2,ncol(outTable),2)] = do.call(rbind,lapply(hap2,function(x){length(x) = targetLengths;as.numeric(x)}))
+    colnames(outTable)[seq(1,ncol(outTable),2)] = paste(1:length(pop),"hap1",sep="_")
+    colnames(outTable)[seq(2,ncol(outTable),2)] = paste(1:length(pop),"hap2",sep="_")
     genotypeAndMarkerTable = cbind(genotypeAndMarkerTable,outTable)
   }
   genotypeAndMarkerTable

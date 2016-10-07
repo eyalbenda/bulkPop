@@ -18,3 +18,15 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// summarizePop
+NumericVector summarizePop(List hapPop, int maxLength);
+RcppExport SEXP bulkPop_summarizePop(SEXP hapPopSEXP, SEXP maxLengthSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< List >::type hapPop(hapPopSEXP);
+    Rcpp::traits::input_parameter< int >::type maxLength(maxLengthSEXP);
+    __result = Rcpp::wrap(summarizePop(hapPop, maxLength));
+    return __result;
+END_RCPP
+}
