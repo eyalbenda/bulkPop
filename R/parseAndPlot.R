@@ -1,8 +1,36 @@
 #' @import ggplot2
 #' @import ggthemes
-#' @useDynLib bulkPop
+#' @import Rcpp
 
+Rcpp::cppFunction('NumericVector summarizePop(List hapPop,int maxLength) {
+  if(maxLength<1)
+  {
+    throw std::invalid_argument("length of haplotype must be larger than 0");
+  }
+  NumericVector counts(maxLength);
+  NumericVector size(maxLength);
+  List::iterator it;
+  for(it = hapPop.begin();it!=hapPop.end();++it)
+  {
+    LogicalVector Hap = as<LogicalVector>(*it);
+    for(int i=0;i<Hap.length();i++)
+    {
+      if(Hap[i])
+      {
+        counts[i] += 1;
+      }
+      size[i]+=1;
+    }
+  }
+  return counts/size;
+}
+')
 
+#' Function to parse genotype table from a population of individuals and genome object
+#' Useful for generating data frames to be used for plotting
+#' @param pop a population of individuals
+#' @param genome a genome object
+#' @param summarize If FALSE, output raw genotypes (big matrix). TRUE: Output allele frequencies
 #' @export
 parseAllGenotypes = function(pop,genome,summarize=F)
 {
@@ -29,7 +57,10 @@ parseAllGenotypes = function(pop,genome,summarize=F)
   genotypeAndMarkerTable
 }
 
-
+#' Plot genotype and marker table
+#' @param genotypeAndMarkerTable a table generated with parseAllGenotypes
+#' @param calcFreqs Do allele frequencies need to be calculated from the table (see summarize in parseAllGenotypes function)
+#' @param internal generate plot (FALSE) or just return plotting dataframe (TRUE)?
 #' @export
 plotGenotypeAndMarkerTable = function(genotypeAndMarkerTable,calcFreqs=T,internal = F)
 {
@@ -47,11 +78,19 @@ plotGenotypeAndMarkerTable = function(genotypeAndMarkerTable,calcFreqs=T,interna
     return(df)
   else
   {
+    pos = NULL;Frequency = NULL ;chrom = NULL
     ggplot(df,aes(x = pos,y=Frequency,color=chrom,fill=chrom)) + geom_point() + ylim(c(0,1)) +
       theme_bw() + scale_color_tableau() + scale_fill_tableau() + facet_wrap(~chrom,nrow=1,scales = "free_x")
   }
 }
 
+#' Plot a list of genotypes and markers
+#' An extension of plotGenotypeAndMarkerTable to plot multiple populations/generations.
+#' @param genotypeAndMarkerList a list where each element is a genotypeAndMarkerTable
+#' @param calcFreqs Do allele frequencies need to be calculated from the table (see summarize in parseAllGenotypes function)
+#' @param chromPos optional matrix with two columns (chromosome and position). If given, only these positions will be plotted
+#' @param markers optional vector of variants. if given, only these variants will be plotted.
+#' @param internal generate plot (FALSE) or just return plotting dataframe (TRUE)?
 #' @export
 plotGenotypeAndMarkerList = function(genotypeAndMarkerList,calcFreqs=T,chromPos = NULL, markers = NULL, internal =F)
 {
@@ -67,6 +106,7 @@ plotGenotypeAndMarkerList = function(genotypeAndMarkerList,calcFreqs=T,chromPos 
   }
   if(internal)
     return(dfAll)
+  pos = NULL;Frequency = NULL ;generation = NULL;
   ggplot(dfAll,aes(x = pos,y=Frequency,color = generation)) + geom_line() + ylim(c(0,1)) +
     theme_bw() + scale_color_gradient_tableau(palette="Light Red-Green") + facet_wrap(~chrom,nrow=1,scales = "free_x") + theme(axis.text.x = element_text(angle=90,hjust=1))
 }

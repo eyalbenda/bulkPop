@@ -5,6 +5,12 @@ initiateCluster<-function(ncores=7)
   makeCluster(getOption("cl.cores", ncores))
 }
 
+
+#' Find closest marker to a position
+#' @param genome A genome object to search in
+#' @param chrom The chromosome to query
+#' @param pos position in the chromosome
+#' @return the name of the closest variant
 #' @export
 findProxyForPosition = function(genome,chrom,pos)
 {
